@@ -1,0 +1,100 @@
+/* 🎨 Paleta base */
+:root {
+  --color-bg: #0b0b0b;
+  --color-surface: #1f1f1f;
+  --color-primary: #00ff9d;
+  --color-accent: #ff007f;
+  --color-cyan: #00c8ff;
+  --color-text: #e2f1ff;
+  --color-muted: #888;
+  --transition-fast: 0.2s ease;
+}
+
+/* 🔳 Fondo general */
+body {
+  background: linear-gradient(135deg, var(--color-bg), var(--color-surface));
+  color: var(--color-text);
+  font-family: 'Inter', 'Share Tech Mono', monospace;
+  margin: 0;
+  padding: 0;
+}
+
+/* 🧭 Navbar */
+.navbar {
+  background-color: rgba(15, 15, 15, 0.95) !important;
+  border-bottom: 1px solid var(--color-primary);
+  box-shadow: 0 0 10px rgba(0, 255, 157, 0.1);
+  transition: var(--transition-fast);
+}
+
+.navbar-brand {
+  color: var(--color-primary) !important;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.navbar-brand:hover {
+  color: var(--color-accent) !important;
+  text-shadow: 0 0 8px var(--color-accent);
+}
+
+/* 🧩 Links */
+.nav-link {
+  color: var(--color-text) !important;
+  transition: var(--transition-fast);
+}
+
+.nav-link.active,
+.nav-link:hover {
+  color: var(--color-primary) !important;
+  text-shadow: 0 0 6px var(--color-primary);
+}
+
+/* 🪩 Botones principales */
+.btn-primary {
+  background-color: var(--color-primary);
+  border: none;
+  color: #000;
+  font-weight: 600;
+  text-transform: uppercase;
+  transition: var(--transition-fast);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-accent);
+  box-shadow: 0 0 15px var(--color-accent);
+  color: #fff;
+}
+
+/* 🧱 Cards o contenedores */
+.card {
+  background-color: rgba(31, 31, 31, 0.85);
+  border: 1px solid rgba(0, 255, 157, 0.2);
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 255, 157, 0.05);
+  transition: var(--transition-fast);
+}
+
+.card:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 20px rgba(255, 0, 127, 0.1);
+}
+
+/* ✨ Efecto Glow para títulos */
+h1, h2, h3 {
+  font-family: 'Orbitron', sans-serif;
+  text-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
+}
+
+/* 🌙 Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
