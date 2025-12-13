@@ -1,0 +1,316 @@
+/* 🎨 Paleta base */
+:root {
+  --color-bg: #0b0b0b;
+  --color-surface: #1f1f1f;
+  --color-primary: #00ff9d;
+  --color-accent: #ff007f;
+  --color-cyan: #00c8ff;
+  --color-text: #e2f1ff;
+  --color-muted: #888;
+  --transition-fast: 0.2s ease;
+  --navbar-height: 60px;
+}
+
+/* 🔳 Fondo general */
+body {
+  background: linear-gradient(135deg, var(--color-bg), var(--color-surface));
+  color: var(--color-text);
+  font-family: 'Inter', 'Share Tech Mono', monospace;
+  margin: 0;
+  padding: 0;
+}
+
+/* Navbar */
+.navbar {
+  background-color: rgba(15, 15, 15, 0.95) !important;
+  border-bottom: 1px solid var(--color-primary);
+  box-shadow: 0 0 10px rgba(0, 255, 157, 0.1);
+  transition: var(--transition-fast);
+  z-index: 1030;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.navbar.sticky-top {
+  box-shadow: 0 2px 20px rgba(0, 255, 157, 0.2);
+}
+
+.navbar-brand {
+  color: var(--color-primary) !important;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.navbar-brand:hover {
+  color: var(--color-accent) !important;
+  text-shadow: 0 0 8px var(--color-accent);
+}
+
+/* 🧩 Links */
+.nav-link {
+  color: var(--color-text) !important;
+  transition: var(--transition-fast);
+}
+
+.nav-link.active,
+.nav-link:hover {
+  color: var(--color-primary) !important;
+  text-shadow: 0 0 6px var(--color-primary);
+}
+
+/* 🪩 Botones principales */
+.btn-primary {
+  background-color: var(--color-primary);
+  border: none;
+  color: #000;
+  font-weight: 600;
+  text-transform: uppercase;
+  transition: var(--transition-fast);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-accent);
+  box-shadow: 0 0 15px var(--color-accent);
+  color: #fff;
+}
+
+/* 🧱 Cards o contenedores */
+.card {
+  background-color: rgba(31, 31, 31, 0.85);
+  border: 1px solid rgba(0, 255, 157, 0.2);
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 255, 157, 0.05);
+  transition: var(--transition-fast);
+}
+
+.card:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 20px rgba(255, 0, 127, 0.1);
+}
+
+/* ✨ Efecto Glow para títulos */
+h1, h2, h3 {
+  font-family: 'Orbitron', sans-serif;
+  text-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
+}
+
+/* 🌙 Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+/* 🛒 Estilos del Carrito */
+.cart-card-transparent {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(128, 128, 128, 0.2) !important;
+}
+
+/* Resumen de Compra Sticky (Solución Profesional) */
+.cart-summary-sticky {
+  position: sticky;
+  top: calc(var(--navbar-height) + 1.5rem); /* navbar + margen visual */
+  z-index: 1020;
+  transition: top 0.2s ease;
+}
+
+/* En móviles, desactivar sticky para mejor UX */
+@media (max-width: 768px) {
+  .cart-summary-sticky {
+    position: relative !important;
+    top: 0 !important;
+  }
+}
+
+/* Adaptación para modo claro */
+@media (prefers-color-scheme: light) {
+  .cart-card-transparent {
+    background: rgba(255, 255, 255, 0.7) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+.cart-item {
+  transition: all 0.3s ease;
+  background: transparent;
+}
+
+.cart-item:hover {
+  background: rgba(0, 255, 157, 0.05) !important;
+}
+
+@media (prefers-color-scheme: light) {
+  .cart-item:hover {
+    background: rgba(0, 0, 0, 0.03) !important;
+  }
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #000;
+  box-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
+}
+
+.btn-outline-danger:hover {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(255, 0, 127, 0.3);
+}
+
+/* Asegurar que el texto sea legible en el carrito */
+.cart-card-transparent .card-body,
+.cart-card-transparent .card-header {
+  color: inherit;
+}
+
+.cart-card-transparent h5,
+.cart-card-transparent h4,
+.cart-card-transparent h2,
+.cart-card-transparent strong {
+  color: inherit;
+}
+
+/* Animación para el carrito vacío */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeIn 0.5s ease;
+}
+
+/* Mejoras en los badges */
+.badge {
+  padding: 0.35em 0.65em;
+  font-weight: 500;
+}
+
+/* Efecto hover en botones del carrito */
+.btn-group .btn {
+  transition: all 0.2s ease;
+}
+
+.btn-group .btn:hover {
+  transform: scale(1.05);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .cart-item {
+    padding: 1.5rem !important;
+  }
+  
+  .sticky-top {
+    position: relative !important;
+    top: 0 !important;
+  }
+}
+
+/* 💳 Estilos del Modal de Checkout */
+.modal {
+  z-index: 1050;
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  z-index: 1040;
+}
+
+.payment-method-card {
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.payment-method-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-5px);
+  box-shadow: 0 5px 20px rgba(0, 255, 157, 0.2);
+}
+
+.payment-method-card.selected {
+  border-color: var(--color-primary);
+  background: rgba(0, 255, 157, 0.1) !important;
+  box-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
+}
+
+.modal-content {
+  background: rgba(31, 31, 31, 0.95) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(128, 128, 128, 0.3) !important;
+}
+
+.modal-header {
+  border-bottom: 1px solid rgba(128, 128, 128, 0.3) !important;
+}
+
+.modal-footer {
+  border-top: 1px solid rgba(128, 128, 128, 0.3) !important;
+}
+
+.modal-title {
+  color: var(--color-text) !important;
+}
+
+.form-control {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(128, 128, 128, 0.3) !important;
+  color: var(--color-text) !important;
+}
+
+.form-control:focus {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-text) !important;
+  box-shadow: 0 0 10px rgba(0, 255, 157, 0.2) !important;
+}
+
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.form-label {
+  color: var(--color-text) !important;
+}
+
+@media (prefers-color-scheme: light) {
+  .modal-content {
+    background: rgba(255, 255, 255, 0.95) !important;
+  }
+  
+  .payment-method-card {
+    background: rgba(255, 255, 255, 0.7) !important;
+  }
+  
+  .form-control {
+    background: rgba(0, 0, 0, 0.05) !important;
+    color: #000 !important;
+  }
+  
+  .form-control::placeholder {
+    color: rgba(0, 0, 0, 0.5) !important;
+  }
+  
+  .form-label {
+    color: #000 !important;
+  }
+}
