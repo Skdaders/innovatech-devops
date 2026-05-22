@@ -1,0 +1,57 @@
+
+name: CI/CD Backend
+
+on:
+  push:
+    branches:
+      - deploy
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-backend.yml"
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Login Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build y Push imagen
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/innovatech-backend:latest
+
+      - name: Deploy en EC2
+        uses: appleboy/ssh-action@v1.2.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker stop backend || true
+            docker rm backend || true
+
+            docker pull ${{ secrets.DOCKER_USERNAME }}/innovatech-backend:latest
+
+            docker run -d \
+              --name backend \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              -e PORT=3000 \
+              -e DB_HOST=${{ secrets.DB_HOST }} \
+              -e DB_PORT=5432 \
+              -e DB_USER=${{ secrets.DB_USER }} \
+              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              -e DB_NAME=${{ secrets.DB_NAME }} \
+              -v backend_data:/app/data \
+              ${{ secrets.DOCKER_USERNAME }}/innovatech-backend:latest

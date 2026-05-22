@@ -1,0 +1,64 @@
+services:
+
+  #BD
+  db:
+    image: postgres:15-alpine         
+    container_name: db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data  
+    networks:
+      - app-network
+    ports:
+      - "5432:5432"                        
+
+  #BAKEND 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    restart: unless-stopped
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - PORT=3000
+    depends_on:
+      - db
+    networks:
+      - app-network
+    ports:
+      - "3000:3000"
+
+  #FROND
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+    container_name: frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    ports:
+      - "80:80"
+
+#VOLUMENES
+volumes:
+  db_data:
+    driver: local
+
+#RED INTERNA 
+networks:
+  app-network:
+    driver: bridge
