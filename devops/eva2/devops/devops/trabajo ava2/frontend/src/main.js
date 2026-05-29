@@ -11,7 +11,7 @@ appEl.innerHTML = `
   <div class="app">
     <header class="header">
       <div class="header-inner">
-        <span class="logo">Tienda</span>
+        <span class="logo">Tienda Innovatech moderna</span>
         <button type="button" class="btn-header" id="btnAddProduct">+ Agregar producto</button>
         <button type="button" class="btn-cart" id="btnOpenCart">
           Carrito <span class="badge" id="cartCount">0</span>
@@ -77,9 +77,15 @@ appEl.innerHTML = `
 const style = document.createElement("style");
 style.textContent = `
   * { box-sizing: border-box; }
-  body { margin: 0; background: #ededed; font-family: system-ui, sans-serif; color: #333; }
+  body {
+    margin: 0;
+    background: linear-gradient(165deg, #ede7f6 0%, #d1c4e9 40%, #b39ddb 100%);
+    background-attachment: fixed;
+    font-family: system-ui, sans-serif;
+    color: #333;
+  }
   .app { min-height: 100vh; }
-  .header { background: #ffe600; border-bottom: 1px solid #e6cf00; position: sticky; top: 0; z-index: 10; }
+  .header { background:rgb(0, 255, 8); border-bottom: 1px solidrgb(27, 230, 0); position: sticky; top: 0; z-index: 10; }
   .header-inner { max-width: 1100px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .logo { font-weight: 800; font-size: 1.35rem; color: #333; }
   .btn-header { margin-left: auto; padding: 8px 14px; border: 1px solid #3483fa; background: #fff; color: #3483fa; border-radius: 6px; cursor: pointer; font-weight: 600; }
