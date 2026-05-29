@@ -24,15 +24,21 @@ async function initDb() {
       price_cents INTEGER NOT NULL DEFAULT 0 CHECK (price_cents >= 0)
     );
 
-    -- Encabezado de la venta (puede incluir múltiples productos en sale_items)
+    CREATE TABLE IF NOT EXISTS delivery_locations (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      region TEXT NOT NULL DEFAULT '',
+      delivery_days INTEGER NOT NULL DEFAULT 3 CHECK (delivery_days > 0)
+    );
+
     CREATE TABLE IF NOT EXISTS sale_orders (
       id SERIAL PRIMARY KEY,
       scheduled_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       status TEXT NOT NULL DEFAULT 'programada',
+      delivery_location_id INTEGER REFERENCES delivery_locations(id),
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
-    -- Items de la venta (un renglón por producto)
     CREATE TABLE IF NOT EXISTS sale_items (
       id SERIAL PRIMARY KEY,
       sale_id INTEGER NOT NULL REFERENCES sale_orders(id) ON DELETE CASCADE,
@@ -40,7 +46,6 @@ async function initDb() {
       quantity INTEGER NOT NULL CHECK (quantity > 0)
     );
 
-    -- 1 despacho por venta (sale_order)
     CREATE TABLE IF NOT EXISTS sale_dispatches (
       id SERIAL PRIMARY KEY,
       sale_id INTEGER NOT NULL UNIQUE REFERENCES sale_orders(id) ON DELETE CASCADE,
@@ -50,19 +55,38 @@ async function initDb() {
     );
   `);
 
-  const { rows } = await pool.query(
+  await pool.query(`
+    ALTER TABLE sale_orders
+    ADD COLUMN IF NOT EXISTS delivery_location_id INTEGER REFERENCES delivery_locations(id)
+  `);
+
+  const { rows: locCount } = await pool.query(
+    "SELECT COUNT(*)::int AS count FROM delivery_locations"
+  );
+  if (locCount[0].count === 0) {
+    await pool.query(`
+      INSERT INTO delivery_locations (name, region, delivery_days) VALUES
+        ('Santiago Centro', 'Región Metropolitana', 2),
+        ('Providencia', 'Región Metropolitana', 2),
+        ('Maipú', 'Región Metropolitana', 3),
+        ('La Florida', 'Región Metropolitana', 3),
+        ('Valparaíso', 'Valparaíso', 4),
+        ('Viña del Mar', 'Valparaíso', 4),
+        ('Concepción', 'Biobío', 5)
+    `);
+  }
+
+  const { rows: prodCount } = await pool.query(
     "SELECT COUNT(*)::int AS count FROM products"
   );
-  if (rows[0].count === 0) {
-    await pool.query(
-      `
+  if (prodCount[0].count === 0) {
+    await pool.query(`
       INSERT INTO products (name, price_cents) VALUES
-        ('Producto Demo A', 9900),
-        ('Producto Demo B', 14900),
-        ('Producto Demo C', 19900),
-        ('Producto Demo D', 25900)
-      `
-    );
+        ('Notebook 14"', 399990),
+        ('Mouse inalámbrico', 12990),
+        ('Teclado mecánico', 45990),
+        ('Monitor 24"', 89990)
+    `);
   }
 }
 
@@ -77,6 +101,41 @@ app.get("/products", async (_req, res) => {
   res.json({ products: rows });
 });
 
+app.post("/products", async (req, res) => {
+  const name = String(req.body?.name || "").trim();
+  const priceCents = Number(req.body?.price_cents);
+
+  if (!name) {
+    return res.status(400).json({ error: "El nombre es obligatorio" });
+  }
+  if (!Number.isInteger(priceCents) || priceCents <= 0) {
+    return res.status(400).json({
+      error: "price_cents debe ser un entero mayor a 0",
+    });
+  }
+
+  const { rows } = await pool.query(
+    `
+      INSERT INTO products (name, price_cents)
+      VALUES ($1, $2)
+      RETURNING id, name, price_cents
+    `,
+    [name, priceCents]
+  );
+  res.status(201).json({ product: rows[0] });
+});
+
+app.get("/delivery-locations", async (_req, res) => {
+  const { rows } = await pool.query(
+    `
+      SELECT id, name, region, delivery_days
+      FROM delivery_locations
+      ORDER BY region, name
+    `
+  );
+  res.json({ locations: rows });
+});
+
 app.get("/sales", async (_req, res) => {
   const { rows } = await pool.query(`
     SELECT
@@ -86,6 +145,8 @@ app.get("/sales", async (_req, res) => {
       sd.status AS dispatch_status,
       sd.dispatched_at,
       so.created_at,
+      dl.name AS delivery_name,
+      dl.region AS delivery_region,
       SUM(p.price_cents * si.quantity) AS total_cents,
       json_agg(
         json_build_object(
@@ -101,17 +162,17 @@ app.get("/sales", async (_req, res) => {
     JOIN sale_items si ON si.sale_id = so.id
     JOIN products p ON p.id = si.product_id
     LEFT JOIN sale_dispatches sd ON sd.sale_id = so.id
-    GROUP BY so.id, sd.status, sd.dispatched_at
+    LEFT JOIN delivery_locations dl ON dl.id = so.delivery_location_id
+    GROUP BY so.id, sd.status, sd.dispatched_at, dl.name, dl.region
     ORDER BY so.created_at DESC, so.id DESC
   `);
   res.json({ sales: rows });
 });
 
 app.post("/sales", async (req, res) => {
-  // Soporta formato nuevo: { items: [{productId, quantity}, ...] }
-  // y mantiene compatibilidad con el formato anterior:
-  // { productId, quantity }
   let items = req.body?.items;
+  const deliveryLocationId = Number(req.body?.deliveryLocationId);
+
   if (!Array.isArray(items)) {
     const productId = Number(req.body?.productId);
     const quantity = Number(req.body?.quantity);
@@ -131,8 +192,13 @@ app.post("/sales", async (req, res) => {
     });
   }
 
-  // Normaliza: suma cantidades por producto (por si el cliente manda duplicados)
-  const normalized = new Map(); // productId -> quantity
+  if (!Number.isInteger(deliveryLocationId) || deliveryLocationId <= 0) {
+    return res.status(400).json({
+      error: "deliveryLocationId es obligatorio",
+    });
+  }
+
+  const normalized = new Map();
   for (const item of items) {
     const productId = Number(item?.productId);
     const quantity = Number(item?.quantity);
@@ -154,15 +220,20 @@ app.post("/sales", async (req, res) => {
   const normalizedItems = Array.from(normalized.entries()).map(
     ([productId, quantity]) => ({ productId, quantity })
   );
-  if (normalizedItems.length === 0) {
-    return res
-      .status(400)
-      .json({ error: "No hay items válidos para la venta" });
-  }
 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+
+    const locCheck = await client.query(
+      "SELECT id, name, region FROM delivery_locations WHERE id = $1",
+      [deliveryLocationId]
+    );
+    if (locCheck.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Lugar de entrega no existe" });
+    }
+    const location = locCheck.rows[0];
 
     const productIds = normalizedItems.map((i) => i.productId);
     const { rows: productRows } = await client.query(
@@ -170,19 +241,18 @@ app.post("/sales", async (req, res) => {
       [productIds]
     );
     const foundIds = new Set(productRows.map((r) => r.id));
-    const missing = productIds.filter((id) => !foundIds.has(id));
-    if (missing.length > 0) {
+    if (productIds.some((id) => !foundIds.has(id))) {
       await client.query("ROLLBACK");
       return res.status(404).json({ error: "Producto no existe" });
     }
 
     const saleResult = await client.query(
       `
-        INSERT INTO sale_orders (status)
-        VALUES ('programada')
-        RETURNING id, scheduled_at, status, created_at
+        INSERT INTO sale_orders (status, delivery_location_id)
+        VALUES ('pagada', $1)
+        RETURNING id, scheduled_at, status, created_at, delivery_location_id
       `,
-      []
+      [deliveryLocationId]
     );
     const saleId = saleResult.rows[0].id;
 
@@ -196,13 +266,13 @@ app.post("/sales", async (req, res) => {
       );
     }
 
-    // En el momento de agendar: generamos el despacho para esa venta
+    const dispatchNote = `Entrega: ${location.name} (${location.region})`;
     await client.query(
       `
-        INSERT INTO sale_dispatches (sale_id, status)
-        VALUES ($1, 'generado')
+        INSERT INTO sale_dispatches (sale_id, status, notes)
+        VALUES ($1, 'generado', $2)
       `,
-      [saleId]
+      [saleId, dispatchNote]
     );
 
     await client.query("COMMIT");
@@ -216,6 +286,8 @@ app.post("/sales", async (req, res) => {
         sd.status AS dispatch_status,
         sd.dispatched_at,
         so.created_at,
+        dl.name AS delivery_name,
+        dl.region AS delivery_region,
         SUM(p.price_cents * si.quantity) AS total_cents,
         json_agg(
           json_build_object(
@@ -231,8 +303,9 @@ app.post("/sales", async (req, res) => {
       JOIN sale_items si ON si.sale_id = so.id
       JOIN products p ON p.id = si.product_id
       LEFT JOIN sale_dispatches sd ON sd.sale_id = so.id
+      LEFT JOIN delivery_locations dl ON dl.id = so.delivery_location_id
       WHERE so.id = $1
-      GROUP BY so.id, sd.status, sd.dispatched_at
+      GROUP BY so.id, sd.status, sd.dispatched_at, dl.name, dl.region
       `,
       [saleId]
     );

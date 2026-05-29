@@ -1,8 +1,7 @@
 services:
-
   #BD
   db:
-    image: postgres:15-alpine         
+    image: postgres:15-alpine
     container_name: db
     restart: unless-stopped
     environment:
@@ -10,13 +9,13 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - db_data:/var/lib/postgresql/data  
+      - db_data:/var/lib/postgresql/data
     networks:
       - app-network
     ports:
-      - "5432:5432"                        
+      - "5432:5432"
 
-  #BAKEND 
+  #BAKEND
   backend:
     build:
       context: ./backend
@@ -58,7 +57,7 @@ volumes:
   db_data:
     driver: local
 
-#RED INTERNA 
+#RED INTERNA
 networks:
   app-network:
     driver: bridge
