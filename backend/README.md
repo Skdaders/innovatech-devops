@@ -82,3 +82,4 @@ Configuración de secrets: ver documentación del repositorio o la sección Acti
 | `DB_PASSWORD`| Contraseña de la BD                            |
 | `DB_NAME`    | Nombre de la base de datos                    |
 | `PORT`       | Puerto HTTP del proceso Node (ej. `3000`)      |
+ 
