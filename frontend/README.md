@@ -87,3 +87,4 @@ En GitHub Actions debés configurar el secret **`VITE_API_URL`** con la URL púb
 Las variables del backend (`DB_*`) no aplican al contenedor front; siguen configuradas para el servicio backend en Compose o en la EC2 del API.
  
  
+ 
